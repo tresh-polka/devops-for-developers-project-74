@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -7,12 +5,31 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./app:/app
-    # ports:              # порты теперь публикует только Caddy
-    #   - "8080:8080"
     command: make dev
     environment:
       - NODE_ENV=development
+      - DATABASE_HOST=db
+      - DATABASE_NAME=postgres
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=password
+    depends_on:
+      db:
+        condition: service_healthy
     user: "${UID:-1000}:${GID:-1000}"
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   caddy:
     image: caddy:latest
@@ -24,9 +41,11 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - app
+      app:
+        condition: service_started
     restart: unless-stopped
 
 volumes:
+  postgres_data:
   caddy_data:
   caddy_config:
