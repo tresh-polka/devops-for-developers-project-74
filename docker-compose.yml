@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  setup:
+    image: node:20.12.2
+    working_dir: /root
+    volumes:
+      - ./app:/root
+    user: "${UID:-1000}:${GID:-1000}"
+    command: make setup
+
+  dev:
+    image: node:20.12.2
+    working_dir: /root
+    volumes:
+      - ./app:/root
+    ports:
+      - "8080:8080"
+    user: "${UID:-1000}:${GID:-1000}"
+    command: make dev
+
+  blog:
+    image: node:20.12.2
+    working_dir: /app
+    volumes:
+      - ./app:/app
+    ports:
+      - "8080:8080"
+    user: "${UID:-1000}:${GID:-1000}"
+    command: sh -c "npm install && node server.js"
