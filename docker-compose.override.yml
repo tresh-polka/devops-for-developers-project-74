@@ -4,11 +4,29 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile 
+      dockerfile: Dockerfile
     volumes:
       - ./app:/app
-    ports:
-      - "8080:8080"
+    # ports:              # порты теперь публикует только Caddy
+    #   - "8080:8080"
     command: make dev
     environment:
       - NODE_ENV=development
+    user: "${UID:-1000}:${GID:-1000}"
+
+  caddy:
+    image: caddy:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./services/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
