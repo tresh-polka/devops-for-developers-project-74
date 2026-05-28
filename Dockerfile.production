@@ -1,0 +1,26 @@
+FROM node:20.12.2
+
+# Устанавливаем make (нужен для make build и make start)
+RUN apt-get update && apt-get install -y make && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Копируем файлы с зависимостями (для кеширования слоев)
+COPY app/package.json package.json
+COPY app/package-lock.json package-lock.json
+
+# Устанавливаем зависимости (ci — чистая установка по lock-файлу)
+RUN npm ci
+
+# Копируем всё остальное приложение
+COPY app/. .
+
+# Переменные окружения
+ENV NODE_ENV=production
+EXPOSE 8080
+
+# Сборка приложения (например, webpack)
+RUN make build
+
+# Команда запуска в production
+CMD ["make", "start"]
