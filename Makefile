@@ -1,4 +1,7 @@
-.PHONY: setup test dev
+.PHONY: ci
+
+ci:
+	docker-compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from app
 
 setup:
 	docker-compose run --rm app make setup
